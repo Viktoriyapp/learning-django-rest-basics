@@ -1,0 +1,15 @@
+#PyCharm/IntelliJ
+.idea
+*.iml
+
+#Python
+__pycache__
+*.pyc
+
+#VEnv
+.venv
+env/
+.env
+
+#Django
+db.sqlite3
