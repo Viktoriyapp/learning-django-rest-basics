@@ -1,3 +1,4 @@
+from django.core.validators import MinValueValidator, MinLengthValidator
 from django.db import models
 
 # Create your models here.
@@ -17,7 +18,8 @@ class Manufacturer(TimeStampModelMixin):
 
 
 class Car(TimeStampModelMixin):
-    model = models.CharField(max_length=100)
-    year = models.PositiveIntegerField()
-    price = models.DecimalField(max_digits=10, decimal_places=2)
+    model = models.CharField(max_length=100, validators=[MinLengthValidator(2)])
+    verified = models.BooleanField(default=False)
+    year = models.PositiveIntegerField(validators=[MinValueValidator(1900)])
+    price = models.DecimalField(max_digits=10, decimal_places=2,)
     manufacturer = models.ForeignKey(to=Manufacturer, on_delete=models.CASCADE)

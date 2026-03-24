@@ -1,4 +1,4 @@
-from django.db.models import Q
+from django.db.models import Q, Count, Min, Max
 from django.shortcuts import render
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -38,6 +38,11 @@ class ListCarApiView(APIView):
         'model_name': lambda x: Q(model=x),
     }
 
+    QUERY_ORDER_BY_FIELDS = [
+        'year',
+        '-year',
+    ]
+
     def get(self, request: Request) -> Response:
         cars = Car.objects.all() # here we dont need validation bcs this info comes from our db
 
@@ -46,6 +51,11 @@ class ListCarApiView(APIView):
 
             if query_lookup:
                 cars = cars.filter(query_lookup(request.query_params[param]))
+
+        ordering = request.query_params.get('order_by')
+
+        if ordering and ordering in self.QUERY_ORDER_BY_FIELDS:
+            cars = cars.order_by(ordering)
 
         serializer = CarSerializer(cars, many=True)
         return Response(data=serializer.data, status=status.HTTP_200_OK) # here we serialize the data into JSON
@@ -81,3 +91,14 @@ class CarDetailApiView(APIView):
         car = get_object_or_404(Car, pk=pk)
         car.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class CarStatsView(APIView):
+    def get(self, request: Request) -> Response:
+        stats = Car.objects.aggregate(
+            total_cars=Count('id'),
+            oldest_year=Min('year'),
+            newest_year=Max('year'),
+        )
+        return Response(data=stats, status=status.HTTP_200_OK)
+    # Here we can go without serializers bcs the data just comes from us
